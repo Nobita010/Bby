@@ -9,7 +9,6 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 const messagesFilePath = path.join(__dirname, 'data', 'messages.json');
-const teachersFilePath = path.join(__dirname, 'data', 'teachers.json');
 
 const readData = (filePath) => {
   if (fs.existsSync(filePath)) {
@@ -24,14 +23,6 @@ const writeData = (filePath, data) => {
 };
 
 let messages = readData(messagesFilePath);
-let teachers = readData(teachersFilePath);
-
-const getTeacherData = (senderID) => {
-  if (!teachers[senderID]) {
-    teachers[senderID] = { name: `Teacher_${senderID}`, teaches: 0 };
-  }
-  return teachers[senderID];
-};
 
 app.get('/baby', (req, res) => {
   const { text, remove, list, edit, teach, reply, react, senderID, index } = req.query;
@@ -77,10 +68,7 @@ app.get('/baby', (req, res) => {
     messageReplies.push(...reply.split(',').map(r => r.trim()));
     messages[teach.toLowerCase()] = messageReplies;
     writeData(messagesFilePath, messages);
-    const teacherData = getTeacherData(senderID);
-    teacherData.teaches += 1;
-    writeData(teachersFilePath, teachers);
-    return res.json({ message: 'Replies added successfully.', teacher: teacherData.name, teachs: teacherData.teaches });
+    return res.json({ message: 'Replies added successfully.', teachs: messageReplies.length });
   }
 
   if (teach && react) {
@@ -88,10 +76,7 @@ app.get('/baby', (req, res) => {
     messageReplies.push(...react.split(',').map(r => r.trim()));
     messages[teach.toLowerCase()] = messageReplies;
     writeData(messagesFilePath, messages);
-    const teacherData = getTeacherData(senderID);
-    teacherData.teaches += 1;
-    writeData(teachersFilePath, teachers);
-    return res.json({ message: 'Reactions added successfully.', teacher: teacherData.name, teachs: teacherData.teaches });
+    return res.json({ message: 'Reactions added successfully.', teachs: messageReplies.length });
   }
 
   return res.status(400).json({ message: 'Invalid request.' });
